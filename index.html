@@ -1,145 +1,474 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Car Avoid Game</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      background: #000;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-      color: #fff;
-      text-align: center;
-    }
-    canvas {
-      background: #111;
-      display: block;
-      margin: 0 auto;
-    }
-    #startBtn {
-      margin-top: 20px;
-      padding: 10px 20px;
-      font-size: 20px;
-      cursor: pointer;
-    }
-    #gameOver {
-      font-size: 40px;
-      color: red;
-      margin-top: 20px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Speed Racer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        body {
+            overflow: hidden;
+            background-color: #121212;
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 360px;
+            height: 600px;
+            background-color: #222;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        #road {
+            position: absolute;
+            width: 100%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                0deg,
+                #333 0px,
+                #333 40px,
+                #fff 40px,
+                #fff 60px
+            );
+            background-size: 100% 100px;
+            animation: moveRoad 4s linear infinite;
+        }
+        
+        @keyframes moveRoad {
+            0% {
+                top: 0;
+            }
+            100% {
+                top: -100%;
+            }
+        }
+        
+        #player-car {
+            position: absolute;
+            bottom: 50px;
+            left: 160px;
+            width: 40px;
+            height: 80px;
+            z-index: 10;
+            transition: transform 0.1s ease;
+        }
+        
+        .obstacle {
+            position: absolute;
+            width: 40px;
+            height: 80px;
+            background-color: red;
+            z-index: 5;
+            border-radius: 5px;
+        }
+        
+        #score-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 20px;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+            z-index: 15;
+        }
+        
+        #high-score-display {
+            position: absolute;
+            top: 40px;
+            right: 10px;
+            font-size: 16px;
+            color: #aaa;
+            text-shadow: 1px 1px 2px black;
+            z-index: 15;
+        }
+        
+        #start-screen, #game-over-screen {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+        
+        #game-over-screen {
+            display: none;
+        }
+        
+        .screen-title {
+            font-size: 32px;
+            margin-bottom: 30px;
+            color: #ff5722;
+            text-shadow: 2px 2px 4px #000;
+        }
+        
+        .button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #ff5722, #ff9800);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px 0;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .button:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .controls {
+            margin-top: 30px;
+            text-align: center;
+            color: #ccc;
+        }
+        
+        #sound-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 15;
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            z-index: 15;
+        }
+        
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+    </style>
 </head>
 <body>
-  <h1>🚗 Avoid the Cars Game</h1>
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
-  <br/>
-  <button id="startBtn">Start Game</button>
-  <div id="gameOver"></div>
-
-  <!-- Background Music -->
-  <audio id="background-music" src="https://assets.mixkit.co/music/preview/mixkit-game-level-up-529.mp3" loop></audio>
-
-  <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const startBtn = document.getElementById('startBtn');
-    const gameOverText = document.getElementById('gameOver');
-    const backgroundMusic = document.getElementById('background-music');
-
-    let player = { x: 175, y: 500, width: 50, height: 80, color: 'cyan' };
-    let enemyCars = [];
-    let gameLoop;
-    let isGameRunning = false;
-
-    function drawPlayer() {
-      ctx.fillStyle = player.color;
-      ctx.fillRect(player.x, player.y, player.width, player.height);
-    }
-
-    function drawEnemyCars() {
-      ctx.fillStyle = 'red';
-      enemyCars.forEach(car => {
-        ctx.fillRect(car.x, car.y, car.width, car.height);
-      });
-    }
-
-    function moveEnemyCars() {
-      enemyCars.forEach(car => car.y += 5);
-      enemyCars = enemyCars.filter(car => car.y < canvas.height);
-    }
-
-    function spawnEnemyCar() {
-      const carWidth = 50;
-      const carHeight = 80;
-      const carX = Math.floor(Math.random() * (canvas.width - carWidth));
-      enemyCars.push({ x: carX, y: -carHeight, width: carWidth, height: carHeight });
-    }
-
-    function detectCollision(rect1, rect2) {
-      return (
-        rect1.x < rect2.x + rect2.width &&
-        rect1.x + rect1.width > rect2.x &&
-        rect1.y < rect2.y + rect2.height &&
-        rect1.y + rect1.height > rect2.y
-      );
-    }
-
-    function updateGame() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawPlayer();
-      drawEnemyCars();
-      moveEnemyCars();
-
-      for (let car of enemyCars) {
-        if (detectCollision(player, car)) {
-          endGame();
-          return;
-        }
-      }
-    }
-
-    function startGame() {
-      if (isGameRunning) return;
-      isGameRunning = true;
-      enemyCars = [];
-      player.x = 175;
-      gameOverText.textContent = '';
-
-      // Try to play background music
-      backgroundMusic.currentTime = 0;
-      backgroundMusic.play().catch(err => {
-        console.warn("Music autoplay blocked. Playing after user interaction.");
-      });
-
-      gameLoop = setInterval(updateGame, 100);
-      setInterval(spawnEnemyCar, 1500);
-    }
-
-    function endGame() {
-      isGameRunning = false;
-      clearInterval(gameLoop);
-      backgroundMusic.pause();
-      gameOverText.textContent = "💥 Game Over!";
-    }
-
-    document.addEventListener('keydown', e => {
-      if (!isGameRunning) return;
-      if (e.key === 'ArrowLeft' && player.x > 0) {
-        player.x -= 20;
-      } else if (e.key === 'ArrowRight' && player.x + player.width < canvas.width) {
-        player.x += 20;
-      }
-    });
-
-    startBtn.addEventListener('click', () => {
-      startGame();
-    });
-  </script>
+    <div id="game-container">
+        <button id="sound-toggle">🔊</button>
+        <div id="score-display">Score: 0</div>
+        <div id="high-score-display">High Score: 0</div>
+        
+        <div id="road"></div>
+        
+        <svg id="player-car" viewBox="0 0 100 200">
+            <rect x="10" y="30" width="80" height="140" fill="#3498db" rx="5" />
+            <rect x="20" y="0" width="60" height="50" fill="#2980b9" rx="5" />
+            <circle cx="25" cy="170" r="15" fill="#2c3e50" />
+            <circle cx="75" cy="170" r="15" fill="#2c3e50" />
+            <rect x="30" y="20" width="40" height="20" fill="#ecf0f1" rx="2" />
+        </svg>
+        
+        <div id="start-screen">
+            <h1 class="screen-title">Super Speed Racer</h1>
+            <button class="button" id="start-button">Start Game</button>
+            <div class="controls">
+                <p>Use <strong>Left</strong> and <strong>Right</strong> arrow keys to move</p>
+                <p>Avoid the obstacles!</p>
+            </div>
+        </div>
+        
+        <div id="controls">
+            <button class="control-btn" id="left-btn">←</button>
+            <button class="control-btn" id="right-btn">→</button>
+        </div>
+        
+        <div id="game-over-screen">
+            <h1 class="screen-title">Game Over</h1>
+            <div id="final-score">Score: 0</div>
+            <button class="button" id="restart-button">Play Again</button>
+        </div>
+    </div>
+    
+    <audio id="crash-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-car-crash-with-explosion-1616.mp3"></audio>
+    <audio id="engine-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-car-engine-loop-1301.mp3" loop></audio>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const gameContainer = document.getElementById('game-container');
+            const playerCar = document.getElementById('player-car');
+            const road = document.getElementById('road');
+            const scoreDisplay = document.getElementById('score-display');
+            const highScoreDisplay = document.getElementById('high-score-display');
+            const startScreen = document.getElementById('start-screen');
+            const gameOverScreen = document.getElementById('game-over-screen');
+            const finalScoreDisplay = document.getElementById('final-score');
+            const startButton = document.getElementById('start-button');
+            const restartButton = document.getElementById('restart-button');
+            const soundToggle = document.getElementById('sound-toggle');
+            const crashSound = document.getElementById('crash-sound');
+            const engineSound = document.getElementById('engine-sound');
+            
+            let gameRunning = false;
+            let score = 0;
+            let highScore = localStorage.getItem('highScore') || 0;
+            let speed = 4;
+            let playerX = 160;
+            let obstacles = [];
+            let animationId;
+            let soundEnabled = true;
+            let gameSpeed = 1;
+            
+            highScoreDisplay.textContent = High Score: ${highScore};
+            
+            // Game controls
+            document.addEventListener('keydown', (e) => {
+                if (!gameRunning) return;
+                
+                if (e.key === 'ArrowLeft' && playerX > 40) {
+                    playerX -= 30;
+                    playerCar.style.transform = 'translateX(-5px) rotate(-5deg)';
+                } else if (e.key === 'ArrowRight' && playerX < 280) {
+                    playerX += 30;
+                    playerCar.style.transform = 'translateX(5px) rotate(5deg)';
+                }
+                
+                playerCar.style.left = ${playerX}px;
+            });
+            
+            document.addEventListener('keyup', () => {
+                playerCar.style.transform = 'translateX(0) rotate(0deg)';
+            });
+            
+            // Sound toggle
+            soundToggle.addEventListener('click', () => {
+                soundEnabled = !soundEnabled;
+                soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
+                
+                if (gameRunning && soundEnabled) {
+                    engineSound.play();
+                } else {
+                    engineSound.pause();
+                }
+            });
+            
+            // Add control button listeners
+            const leftBtn = document.getElementById('left-btn');
+            const rightBtn = document.getElementById('right-btn');
+            
+            leftBtn.addEventListener('click', () => {
+                if (gameRunning && playerX > 40) {
+                    playerX -= 30;
+                    playerCar.style.transform = 'translateX(-5px) rotate(-5deg)';
+                    playerCar.style.left = ${playerX}px;
+                    
+                    // Reset transform after animation
+                    setTimeout(() => {
+                        playerCar.style.transform = 'translateX(0) rotate(0deg)';
+                    }, 100);
+                }
+            });
+            
+            rightBtn.addEventListener('click', () => {
+                if (gameRunning && playerX < 280) {
+                    playerX += 30;
+                    playerCar.style.transform = 'translateX(5px) rotate(5deg)';
+                    playerCar.style.left = ${playerX}px;
+                    
+                    // Reset transform after animation
+                    setTimeout(() => {
+                        playerCar.style.transform = 'translateX(0) rotate(0deg)';
+                    }, 100);
+                }
+            });
+            
+            // Start game
+            startButton.addEventListener('click', startGame);
+            restartButton.addEventListener('click', startGame);
+            
+            function startGame() {
+                // Reset game state
+                gameRunning = true;
+                score = 0;
+                speed = 4;
+                gameSpeed = 1;
+                playerX = 160;
+                obstacles = [];
+                scoreDisplay.textContent = Score: ${score};
+                
+                // Clear existing obstacles
+                document.querySelectorAll('.obstacle').forEach(obstacle => obstacle.remove());
+                
+                // Hide screens
+                startScreen.style.display = 'none';
+                gameOverScreen.style.display = 'none';
+                
+                // Play engine sound
+                if (soundEnabled) {
+                    engineSound.currentTime = 0;
+                    engineSound.play();
+                }
+                
+                // Start game loop
+                animationId = requestAnimationFrame(gameLoop);
+            }
+            
+            function gameLoop() {
+                if (!gameRunning) {
+                    cancelAnimationFrame(animationId);
+                    return;
+                }
+                
+                // Move road
+                road.style.animationDuration = ${speed}s;
+                
+                // Generate new obstacles
+                if (Math.random() < 0.02) {
+                    createObstacle();
+                }
+                
+                // Move obstacles
+                moveObstacles();
+                
+                // Check collisions
+                if (checkCollisions()) {
+                    gameOver();
+                    return;
+                }
+                
+                // Increase score and difficulty
+                score++;
+                scoreDisplay.textContent = Score: ${score};
+                
+                if (score % 500 === 0) {
+                    speed = Math.max(1, speed - 0.2);
+                    gameSpeed += 0.1;
+                    playerCar.style.filter = hue-rotate(${score / 100}deg);
+                }
+                
+                animationId = requestAnimationFrame(gameLoop);
+            }
+            
+            function createObstacle() {
+                const obstacle = document.createElement('div');
+                obstacle.className = 'obstacle';
+                
+                // Random position (left or center or right lane)
+                const lane = Math.floor(Math.random() * 3);
+                let posX;
+                
+                if (lane === 0) posX = 50;     // left
+                else if (lane === 1) posX = 160; // center
+                else posX = 270;                // right
+                
+                // Random color
+                const colors = ['#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'];
+                const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                obstacle.style.backgroundColor = randomColor;
+                
+                obstacle.style.left = ${posX}px;
+                obstacle.style.top = '-80px';
+                
+                gameContainer.appendChild(obstacle);
+                obstacles.push({
+                    element: obstacle,
+                    x: posX,
+                    y: -80
+                });
+            }
+            
+            function moveObstacles() {
+                obstacles.forEach(obstacle => {
+                    obstacle.y += 5 * gameSpeed;
+                    obstacle.element.style.top = ${obstacle.y}px;
+                    
+                    // Remove obstacle if off screen
+                    if (obstacle.y > 600) {
+                        obstacle.element.remove();
+                        obstacles = obstacles.filter(o => o !== obstacle);
+                    }
+                });
+            }
+            
+            function checkCollisions() {
+                const playerRect = playerCar.getBoundingClientRect();
+                
+                for (const obstacle of obstacles) {
+                    const obstacleRect = obstacle.element.getBoundingClientRect();
+                    
+                    if (
+                        playerRect.left < obstacleRect.right &&
+                        playerRect.right > obstacleRect.left &&
+                        playerRect.top < obstacleRect.bottom &&
+                        playerRect.bottom > obstacleRect.top
+                    ) {
+                        return true;
+                    }
+                }
+                
+                return false;
+            }
+            
+            function gameOver() {
+                gameRunning = false;
+                
+                // Update high score
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('highScore', highScore);
+                    highScoreDisplay.textContent = High Score: ${highScore};
+                }
+                
+                // Play crash sound
+                if (soundEnabled) {
+                    engineSound.pause();
+                    crashSound.currentTime = 0;
+                    crashSound.play();
+                }
+                
+                // Show game over screen
+                finalScoreDisplay.textContent = Score: ${score};
+                gameOverScreen.style.display = 'flex';
+            }
+        });
+    </script>
 </body>
 </html>
