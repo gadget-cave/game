@@ -3,424 +3,190 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Super Speed Racer</title>
+  <title>Space Dodger Game</title>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Arial', sans-serif;
-    }
-
     body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: black;
+      color: white;
       overflow: hidden;
-      background-color: #121212;
-      color: white;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+      text-align: center;
     }
 
-    #game-container {
-      position: relative;
-      width: 360px;
-      height: 600px;
-      background-color: #222;
-      overflow: hidden;
-      border-radius: 10px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    }
-
-    #road {
-      position: absolute;
-      width: 100%;
-      height: 200%;
-      background: repeating-linear-gradient(
-        0deg,
-        #333 0px,
-        #333 40px,
-        #fff 40px,
-        #fff 60px
-      );
-      background-size: 100% 100px;
-      animation: moveRoad 4s linear infinite;
-    }
-
-    @keyframes moveRoad {
-      0% { top: 0; }
-      100% { top: -100%; }
-    }
-
-    #player-car {
-      position: absolute;
-      bottom: 50px;
-      left: 160px;
-      width: 40px;
-      height: 80px;
-      z-index: 10;
-      transition: transform 0.1s ease;
-    }
-
-    .obstacle {
-      position: absolute;
-      width: 40px;
-      height: 80px;
-      background-color: red;
-      z-index: 5;
-      border-radius: 5px;
-    }
-
-    #score-display {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 20px;
-      color: white;
-      text-shadow: 1px 1px 2px black;
-      z-index: 15;
-    }
-
-    #high-score-display {
-      position: absolute;
-      top: 40px;
-      right: 10px;
-      font-size: 16px;
-      color: #aaa;
-      text-shadow: 1px 1px 2px black;
-      z-index: 15;
-    }
-
-    #start-screen, #game-over-screen {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 20;
-    }
-
-    #game-over-screen {
-      display: none;
-    }
-
-    .screen-title {
-      font-size: 32px;
-      margin-bottom: 30px;
-      color: #ff5722;
-      text-shadow: 2px 2px 4px #000;
-    }
-
-    .button {
-      padding: 12px 30px;
-      background: linear-gradient(135deg, #ff5722, #ff9800);
-      color: white;
-      border: none;
-      border-radius: 30px;
-      font-size: 18px;
-      cursor: pointer;
-      margin: 10px 0;
-      transition: all 0.3s;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
-    }
-
-    .button:active {
-      transform: translateY(1px);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    canvas {
+      background: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1350&q=80') no-repeat center center/cover;
+      display: block;
+      margin: 20px auto;
+      border: 2px solid white;
     }
 
     .controls {
-      margin-top: 30px;
-      text-align: center;
-      color: #ccc;
+      margin-top: 20px;
     }
 
-    #sound-toggle {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 15;
-      background: transparent;
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      margin: 5px;
       border: none;
-      font-size: 24px;
+      border-radius: 5px;
+      background-color: #444;
       color: white;
       cursor: pointer;
     }
 
-    #controls {
-      position: absolute;
-      bottom: 10px;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      z-index: 15;
+    button:hover {
+      background-color: #666;
     }
 
-    .control-btn {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
+    #game-over {
+      display: none;
       font-size: 24px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-
-    .control-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.1);
+      color: red;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <div id="game-container">
-    <button id="sound-toggle">🔊</button>
-    <div id="score-display">Score: 0</div>
-    <div id="high-score-display">High Score: 0</div>
+  <h1>🚀 Space Dodger Game</h1>
+  <canvas id="gameCanvas" width="480" height="320"></canvas>
 
-    <div id="road"></div>
-
-    <svg id="player-car" viewBox="0 0 100 200">
-      <rect x="10" y="30" width="80" height="140" fill="#3498db" rx="5" />
-      <rect x="20" y="0" width="60" height="50" fill="#2980b9" rx="5" />
-      <circle cx="25" cy="170" r="15" fill="#2c3e50" />
-      <circle cx="75" cy="170" r="15" fill="#2c3e50" />
-      <rect x="30" y="20" width="40" height="20" fill="#ecf0f1" rx="2" />
-    </svg>
-
-    <div id="start-screen">
-      <h1 class="screen-title">Super Speed Racer</h1>
-      <button class="button" id="start-button">Start Game</button>
-      <div class="controls">
-        <p>Use <strong>Left</strong> and <strong>Right</strong> arrow keys to move</p>
-        <p>Avoid the obstacles!</p>
-      </div>
-    </div>
-
-    <div id="controls">
-      <button class="control-btn" id="left-btn">←</button>
-      <button class="control-btn" id="right-btn">→</button>
-    </div>
-
-    <div id="game-over-screen">
-      <h1 class="screen-title">Game Over</h1>
-      <div id="final-score">Score: 0</div>
-      <button class="button" id="restart-button">Play Again</button>
-    </div>
+  <div class="controls">
+    <button onclick="startGame()">Start Game</button>
+    <button onclick="toggleSound()">🔊 Toggle Sound</button>
   </div>
 
-  <!-- Sound Effects -->
-  <audio id="crash-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-car-crash-with-explosion-1616.mp3"></audio>
-  <audio id="engine-sound" src="https://assets.mixkit.co/sfx/preview/mixkit-car-engine-loop-1301.mp3" loop></audio>
+  <div id="game-over">💥 Game Over! Refresh to restart.</div>
 
-  <!-- 🎵 Background Music -->
-  <audio id="background-music" src="https://assets.mixkit.co/music/preview/mixkit-arcade-retro-game-239.mp3" loop></audio>
+  <!-- Background Music -->
+  <audio id="backgroundMusic" loop preload="auto">
+    <source src="https://assets.mixkit.co/music/preview/mixkit-game-level-up-529.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <!-- Game Sound Effect -->
+  <audio id="engineSound" preload="auto">
+    <source src="https://freesound.org/data/previews/341/341695_3248244-lq.mp3" type="audio/mpeg">
+  </audio>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const gameContainer = document.getElementById('game-container');
-      const playerCar = document.getElementById('player-car');
-      const road = document.getElementById('road');
-      const scoreDisplay = document.getElementById('score-display');
-      const highScoreDisplay = document.getElementById('high-score-display');
-      const startScreen = document.getElementById('start-screen');
-      const gameOverScreen = document.getElementById('game-over-screen');
-      const finalScoreDisplay = document.getElementById('final-score');
-      const startButton = document.getElementById('start-button');
-      const restartButton = document.getElementById('restart-button');
-      const soundToggle = document.getElementById('sound-toggle');
-      const crashSound = document.getElementById('crash-sound');
-      const engineSound = document.getElementById('engine-sound');
-      const backgroundMusic = document.getElementById('background-music');
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
 
-      let gameRunning = false;
-      let score = 0;
-      let highScore = localStorage.getItem('highScore') || 0;
-      let speed = 4;
-      let playerX = 160;
-      let obstacles = [];
-      let animationId;
-      let soundEnabled = true;
-      let gameSpeed = 1;
+    const backgroundMusic = document.getElementById("backgroundMusic");
+    const engineSound = document.getElementById("engineSound");
 
-      highScoreDisplay.textContent = `High Score: ${highScore}`;
+    let player = { x: 220, y: 280, width: 40, height: 40 };
+    let keys = {};
+    let obstacles = [];
+    let score = 0;
+    let gameOver = false;
+    let soundEnabled = true;
 
-      // Key controls
-      document.addEventListener('keydown', (e) => {
-        if (!gameRunning) return;
-        if (e.key === 'ArrowLeft' && playerX > 40) {
-          playerX -= 30;
-          playerCar.style.transform = 'translateX(-5px) rotate(-5deg)';
-        } else if (e.key === 'ArrowRight' && playerX < 280) {
-          playerX += 30;
-          playerCar.style.transform = 'translateX(5px) rotate(5deg)';
-        }
-        playerCar.style.left = `${playerX}px`;
-      });
+    document.addEventListener("keydown", (e) => keys[e.key] = true);
+    document.addEventListener("keyup", (e) => keys[e.key] = false);
 
-      document.addEventListener('keyup', () => {
-        playerCar.style.transform = 'translateX(0) rotate(0deg)';
-      });
+    function drawPlayer() {
+      ctx.fillStyle = "lime";
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+    }
 
-      // Sound toggle
-      soundToggle.addEventListener('click', () => {
-        soundEnabled = !soundEnabled;
-        soundToggle.textContent = soundEnabled ? '🔊' : '🔇';
-        if (soundEnabled) {
-          if (gameRunning) {
-            engineSound.play();
-          }
-          backgroundMusic.play();
-        } else {
-          engineSound.pause();
-          backgroundMusic.pause();
+    function drawObstacles() {
+      ctx.fillStyle = "red";
+      obstacles.forEach(obstacle => {
+        ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+        obstacle.y += 4;
+
+        // Collision check
+        if (
+          obstacle.x < player.x + player.width &&
+          obstacle.x + obstacle.width > player.x &&
+          obstacle.y < player.y + player.height &&
+          obstacle.y + obstacle.height > player.y
+        ) {
+          gameOver = true;
+          document.getElementById("game-over").style.display = "block";
+          stopSounds();
         }
       });
+    }
 
-      // On-screen buttons
-      document.getElementById('left-btn').addEventListener('click', () => {
-        if (gameRunning && playerX > 40) {
-          playerX -= 30;
-          playerCar.style.left = `${playerX}px`;
-          playerCar.style.transform = 'translateX(-5px) rotate(-5deg)';
-          setTimeout(() => {
-            playerCar.style.transform = 'translateX(0) rotate(0deg)';
-          }, 100);
-        }
-      });
+    function updatePlayer() {
+      if (keys["ArrowLeft"] && player.x > 0) player.x -= 5;
+      if (keys["ArrowRight"] && player.x < canvas.width - player.width) player.x += 5;
+    }
 
-      document.getElementById('right-btn').addEventListener('click', () => {
-        if (gameRunning && playerX < 280) {
-          playerX += 30;
-          playerCar.style.left = `${playerX}px`;
-          playerCar.style.transform = 'translateX(5px) rotate(5deg)';
-          setTimeout(() => {
-            playerCar.style.transform = 'translateX(0) rotate(0deg)';
-          }, 100);
-        }
-      });
-
-      startButton.addEventListener('click', startGame);
-      restartButton.addEventListener('click', startGame);
-
-      function startGame() {
-        gameRunning = true;
-        score = 0;
-        speed = 4;
-        gameSpeed = 1;
-        playerX = 160;
-        obstacles = [];
-        scoreDisplay.textContent = `Score: ${score}`;
-        document.querySelectorAll('.obstacle').forEach(o => o.remove());
-        startScreen.style.display = 'none';
-        gameOverScreen.style.display = 'none';
-        playerCar.style.left = `${playerX}px`;
-        if (soundEnabled) {
-          engineSound.currentTime = 0;
-          engineSound.play();
-          backgroundMusic.currentTime = 0;
-          backgroundMusic.play();
-        }
-        animationId = requestAnimationFrame(gameLoop);
+    function generateObstacles() {
+      if (Math.random() < 0.03) {
+        obstacles.push({
+          x: Math.random() * (canvas.width - 20),
+          y: 0,
+          width: 20,
+          height: 20
+        });
       }
+    }
 
-      function gameLoop() {
-        if (!gameRunning) {
-          cancelAnimationFrame(animationId);
-          return;
-        }
+    function drawScore() {
+      ctx.fillStyle = "white";
+      ctx.font = "16px Arial";
+      ctx.fillText("Score: " + score, 10, 20);
+    }
 
-        road.style.animationDuration = `${speed}s`;
-        if (Math.random() < 0.02) createObstacle();
-        moveObstacles();
+    function gameLoop() {
+      if (gameOver) return;
 
-        if (checkCollisions()) {
-          gameOver();
-          return;
-        }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      updatePlayer();
+      drawPlayer();
+      drawObstacles();
+      generateObstacles();
+      drawScore();
+      score++;
 
-        score++;
-        scoreDisplay.textContent = `Score: ${score}`;
+      requestAnimationFrame(gameLoop);
+    }
 
-        if (score % 500 === 0) {
-          speed = Math.max(1, speed - 0.2);
-          gameSpeed += 0.1;
-          playerCar.style.filter = `hue-rotate(${score / 100}deg)`;
-        }
+    function startGame() {
+      // Reset
+      player.x = 220;
+      obstacles = [];
+      score = 0;
+      gameOver = false;
+      document.getElementById("game-over").style.display = "none";
 
-        animationId = requestAnimationFrame(gameLoop);
-      }
+      // Start music if enabled
+      if (soundEnabled) {
+        backgroundMusic.currentTime = 0;
+        backgroundMusic.play().catch(err => {
+          console.error("Music play failed:", err);
+        });
 
-      function createObstacle() {
-        const obstacle = document.createElement('div');
-        obstacle.className = 'obstacle';
-        const lane = Math.floor(Math.random() * 3);
-        const posX = lane === 0 ? 50 : lane === 1 ? 160 : 270;
-        const colors = ['#e74c3c', '#f39c12', '#9b59b6', '#1abc9c'];
-        obstacle.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        obstacle.style.left = `${posX}px`;
-        obstacle.style.top = '-80px';
-        gameContainer.appendChild(obstacle);
-        obstacles.push({ element: obstacle, x: posX, y: -80 });
-      }
-
-      function moveObstacles() {
-        obstacles.forEach(obstacle => {
-          obstacle.y += 5 * gameSpeed;
-          obstacle.element.style.top = `${obstacle.y}px`;
-          if (obstacle.y > 600) {
-            obstacle.element.remove();
-            obstacles = obstacles.filter(o => o !== obstacle);
-          }
+        engineSound.currentTime = 0;
+        engineSound.play().catch(err => {
+          console.error("Engine sound failed:", err);
         });
       }
 
-      function checkCollisions() {
-        const playerRect = playerCar.getBoundingClientRect();
-        for (const obstacle of obstacles) {
-          const rect = obstacle.element.getBoundingClientRect();
-          if (
-            playerRect.left < rect.right &&
-            playerRect.right > rect.left &&
-            playerRect.top < rect.bottom &&
-            playerRect.bottom > rect.top
-          ) return true;
-        }
-        return false;
-      }
+      gameLoop();
+    }
 
-      function gameOver() {
-        gameRunning = false;
-        if (score > highScore) {
-          highScore = score;
-          localStorage.setItem('highScore', highScore);
-          highScoreDisplay.textContent = `High Score: ${highScore}`;
-        }
-        if (soundEnabled) {
-          engineSound.pause();
-          backgroundMusic.pause();
-          crashSound.currentTime = 0;
-          crashSound.play();
-        }
-        finalScoreDisplay.textContent = `Score: ${score}`;
-        gameOverScreen.style.display = 'flex';
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      if (!soundEnabled) {
+        stopSounds();
+      } else {
+        backgroundMusic.play().catch(err => {
+          console.error("Music toggle play failed:", err);
+        });
       }
-    });
+    }
+
+    function stopSounds() {
+      backgroundMusic.pause();
+      engineSound.pause();
+    }
   </script>
 </body>
 </html>
